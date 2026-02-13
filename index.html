@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Digitec Computación</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide-react@0.292.0/dist/lucide-react.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Estilos base y paleta de colores oscuros/premium */
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-surface: #1a1a1a;
+            --border-color: #2c2c2c;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent-cyan: #00ffff;
+            --accent-violet: #8a2be2;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Estilo para el loader */
+        .loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-cyan);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Clases para transiciones suaves */
+        .section {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+
+        .hidden-section {
+            opacity: 0;
+            transform: translateY(20px);
+            display: none;
+        }
+
+        /* Estilos de acento para gradientes */
+        .cyan-glow {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), 0 0 5px rgba(0, 255, 255, 0.1);
+        }
+
+        .violet-glow {
+             box-shadow: 0 0 15px rgba(138, 43, 226, 0.2), 0 0 5px rgba(138, 43, 226, 0.1);
+        }
+        
+        .card-container {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(0, 255, 255, 0.1);
+        }
+        
+        /* Estilo para los inputs y selects */
+        .form-input {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Loader -->
+    <div id="loader" class="loader-wrapper">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-black/50 backdrop-blur-lg sticky top-0 z-50 border-b border-gray-800">
+        <nav class="container mx-auto px-4 lg:px-6 py-3 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-3">
+                <span class="text-xl font-bold text-white">Inventario Tech</span>
+            </a>
+            <div class="space-x-4">
+                <button onclick="showSection('inventory')" class="text-gray-300 hover:text-white transition-colors">Inventario</button>
+                <button onclick="showSection('contact')" class="text-gray-300 hover:text-white transition-colors">Contacto</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 lg:p-8">
+
+        <!-- Inventory Section -->
+        <section id="inventory-section" class="section">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-white">DIGITEC COMPUTACIÓN</h1>
+                <p class="text-lg text-gray-400 mt-2">Busca, filtra y explora nuestro catálogo de productos.</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-black/30 backdrop-blur-sm p-4 rounded-lg border border-gray-800 mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div class="w-full">
+                    <label for="search" class="block text-sm font-medium text-gray-400 mb-1">Buscar producto</label>
+                    <input type="text" id="search" placeholder="Nombre, clave, categoría..." class="form-input w-full rounded-md p-2">
+                </div>
+                <div class="w-full">
+                    <label for="category" class="block text-sm font-medium text-gray-400 mb-1">Categoría</label>
+                    <select id="category" class="form-input w-full rounded-md p-2 appearance-none">
+                        <option value="all">Todas las categorías</option>
+                    </select>
+                </div>
+                <div class="w-full">
+                    <label for="sort" class="block text-sm font-medium text-gray-400 mb-1">Ordenar por</label>
+                    <select id="sort" class="form-input w-full rounded-md p-2 appearance-none">
+                        <option value="name_asc">Nombre (A-Z)</option>
+                        <option value="name_desc">Nombre (Z-A)</option>
+                        <option value="price_asc">Precio (Menor a Mayor)</option>
+                        <option value="price_desc">Precio (Mayor a Menor)</option>
+                        <option value="qty_asc">Cantidad (Menor a Mayor)</option>
+                        <option value="qty_desc">Cantidad (Mayor a Menor)</option>
+                    </select>
+                </div>
+                 <div class="w-full flex items-center justify-center pt-6">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="availability" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-cyan-500 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                        <span class="ms-3 text-sm font-medium text-gray-300">Mostrar solo disponibles</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Product cards will be injected here -->
+            </div>
+            <div id="no-results" class="text-center py-16 hidden">
+                <h3 class="text-2xl font-semibold text-white">No se encontraron resultados</h3>
+                <p class="text-gray-400 mt-2">Intenta ajustar tus filtros de búsqueda.</p>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact-section" class="section hidden-section max-w-4xl mx-auto">
+             <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-white">Contacto Profesional</h1>
+                <p class="text-lg text-gray-400 mt-2">Hablemos de tu próximo proyecto o consulta de mantenimiento.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div class="space-y-6">
+                    <a href="mailto:24alexis.cortes.osorio@gmail.com" class="flex items-center p-4 rounded-lg card-container violet-glow">
+                        <div id="icon-mail"></div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-white">Correo Electrónico</h3>
+                            <p class="text-gray-400">24alexis.cortes.osorio@gmail.com</p>
+                        </div>
+                    </a>
+                    <a href="https://www.instagram.com/24alexis.cortes.osorio" target="_blank" rel="noopener noreferrer" class="flex items-center p-4 rounded-lg card-container violet-glow">
+                         <div id="icon-instagram"></div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-white">Instagram</h3>
+                            <p class="text-gray-400">@24alexis.cortes.osorio</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="bg-gray-900/50 p-6 rounded-lg border border-gray-800">
+                    <h3 class="text-2xl font-bold mb-4 text-white">Enviar un Mensaje</h3>
+                    <form id="contact-form" class="space-y-4">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                            <input type="text" id="name" name="name" required class="form-input w-full rounded-md p-2">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                            <input type="email" id="email" name="email" required class="form-input w-full rounded-md p-2">
+                        </div>
+                        <div>
+                            <label for="message" class="block text-sm font-medium text-gray-400 mb-1">Mensaje</label>
+                            <textarea id="message" name="message" rows="4" required class="form-input w-full rounded-md p-2"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-cyan-600 text-white font-bold py-2 px-4 rounded-md hover:bg-cyan-700 transition-colors cyan-glow">
+                            Enviar Mensaje
+                        </button>
+                    </form>
+                    <p id="form-status" class="text-center mt-4 text-green-400"></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 mt-12 py-8">
+        <div class="container mx-auto px-4 lg:px-6 text-center text-gray-500">
+            <div class="flex justify-center items-center space-x-6 mb-4">
+                <a href="mailto:24alexis.cortes.osorio@gmail.com" class="hover:text-white transition-colors">24alexis.cortes.osorio@gmail.com</a>
+                <a href="https://www.instagram.com/24alexis.cortes.osorio" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Instagram</a>
+            </div>
+            <p>&copy;2025 Alexis Jesús Cortés Osorio. Todos los derechos reservados.</p>
+            <p class="text-sm mt-1">Sistema de inventario en línea.</p>
+        </div>
+    </footer>
+
+
+    <script type="text/babel">
+        const LucideIcon = ({ name, color, size }) => {
+            const Icon = lucide[name];
+            return Icon ? <Icon color={color} size={size} /> : null;
+        };
+
+        const AppIcons = () => {
+            ReactDOM.render(<LucideIcon name="Mail" color="var(--accent-violet)" size={32} />, document.getElementById('icon-mail'));
+            ReactDOM.render(<LucideIcon name="Instagram" color="var(--accent-violet)" size={32} />, document.getElementById('icon-instagram'));
+        };
+
+        // Renderiza los iconos una vez que el DOM esté listo
+        document.addEventListener('DOMContentLoaded', AppIcons);
+    </script>
+
+    <script>
+        // --- INICIO DE LA BASE DE DATOS (GENERADA DESDE EL CSV) ---
+        const csvData = `Columna1,Columna2,Columna3,Columna4,Columna5
+Cant.,Clave,Descripción,Color,Precio
+,,,
+,,Equipo de computo,,
+1,Thinkcentre,Lenovo Core i5 SSD 240Gb/8 ram,Gris,2200
+,,Lap tops,,
+1,,DELL Core i5 SSD 512/ 16ram/win 11,Negro,6500
+,,,
+,,Localizador,,
+9,MR-839,Localizador Bluetooth Buytiti,Negro/Blanco/Verde,120
+,,,
+,,Soluciones,,
+1,PLASTIC,Restaurador de Plásticos 100ml,Azul,50
+1,,Alcohol Isopropilico 310ml,,65
+,,,
+,,Auriculares,,
+1,PS-4,Audifonos alambricos diadema KIKC pro,Negro,450
+1,MDR-XB550,Audifonos alambricos diadema SONY Extra Bass,Negro,450
+1,Quantum50,Audifonos alambricos JBL,Negro,550
+1,ST-60,Auriculares transparentes SABALA,Transparente,190
+9,ST-540,Auriculares económico SABALA,Blanco/Negro,200
+3,ST-539,Auriculares aluminio,Plata,290
+1,EAR-i102BT,Auriculares Bluetooth para dormir,Negro,120
+2,KL-38,Auriculares Bluetooth 360°,Negro,350
+1,V750NC,Auriculares Diadema Bluetooth,Rojo,250
+1,QC-1000x,Auriculares Diadema Bluetooth,Azul Marino,250
+,,,
+,,Microfonos,,
+1,MIC-812,Microfono Inalámbrico Tipo-C,Negro,120
+,,,
+,,Bocinas,,
+3,BS-FX1101,Bocina Inalambrica portatil c/soporte,Militar/roja,190
+1,BS-FX315,Bocina inalambrica portatil,Rojo/dorado,180
+3,DR-109,Bocina sonido envolvente SABALA con sincronización,Negro/verde,290,
+2,DR-104,Bocina ambiental sonido envolvente 360°,Negro/azul,490
+,,,
+,,Mochilas, maletines y mariconeras,,
+1,,Maletin tipo piel para laptop,Negro,280
+1,,Maletin para Laptop Wilson Original,Negro/rojo,500
+1,NIKE,Mochila NIKE escolar,Azul,250
+1,,Mochila genérica,Negro,200
+3,SPORT,Cangurera Lona,Verde,85
+1,,Cangurera Piel,Café/negro,150
+24,,Mariconera de lona,,120
+,,,
+,,Memorias,,
+2,Kingston,Kingston USB 128,Gris,220
+4,Kingston,Kingston USB 64,Gris,140
+1,Kingston,kingston Type-C 64,Negro,180
+1,2TB,Memoria USB/C 2TB,Plata,250
+,,,
+,,WI-FI USB,,
+1,,Adaptador Wi-fi 600 Mbps Dual Band,Negro,250
+2,,Adaptador nano TP-Link  Wi-fi 150 Mbps,Negro,200
+1,,Adaptador Wifi Generico,Negro,190
+,,,
+,,Fuentes de Poder,,
+1,Q-500-8F,Fuente de Poder 500W,Negro,450
+,,,
+,,Router,,
+1,TD-W8951ND,Router Modem ADSL2+Inalámbrico 150 Mbps,Blanco,300
+,,,
+,,Joystick,,
+1,DE911-3,Control de videojuegos SABALA,Gris,400
+,,,
+,,Punto de venta,,
+1,TM-T88V,Impresora Tickets Térmica,Gris Obscuro,800
+1,LS2208,Sacanner manual Symbol,Gris Obscuro,800
+,,,
+,,Adaptadores,,
+3,,Adaptadores video HDMI-DP,Negro,120
+3,,USB Dogle Bluetoooth,Negro,80
+,,,
+,,Disco de estado solido (SSD),,
+2,SSD,Disco de estado solido (SSD) 240Gb,Negro,780
+,,,
+,,Disco Duro externo,,
+1,,Disco Duro externo USB mecánico 500gb,Azul,380
+1,,Carcasa de Aluminio para SSD externo hasta 4TB,Azul,200
+,,,
+,,Cables para cargador,,
+6,KL-245,Cable carga rapida USB-Type C,Blanco,40
+10,KL-216-2,Cable carga rapida USB-Lighthing,Blanco,50
+10,KL-216-3,Cable carga rapida USB-Type C,Blanco,50
+2,KL-243,Cable carga rapida 3 en 1,Negro,80
+3,WIR-F3N1,Cable 3 en 1,Negro,50
+2,KL-601,Cable carga rápida tipo c-tipo c 60w,Lila pastel,60
+1,KL-602,Cable carga rápida tipo c-tipo c 60w,Blanco pastel,60
+1,KL-603,Cable carga rápida tipo c-tipo c 60w,Azul pastel,60
+1,KL-244-4,Cable carga rápida tipo c-tipo c 27w,Rojo,60
+1,KL-245-2,Cable carga rápida tipo c-Lighthing 20w 1M,Azul pastel,60
+1,KL-245-3,Cable carga rápida tipo c-Lighthing 20w 1.2M,Azul pastel,60
+2,KL-245-4,Cable carga rápida tipo c-Lighthing 20w,Rojo,60
+1,KL-245-5,Cable carga rápida tipo c-Lighthing 20w,Negro,60
+2,KL-232-3,Cable carga rápida USB-type-c 2a,Rojo,60
+,,,
+,,Multiplexor USB  y de corriente electrica con USB,,
+1,Hi-Speed,Multiplexor USB  Hub Hi-Speed,Negro,140
+3,OTG-01U,Multiplexor USB Hub Type C (4 ports),Plata,80
+1,CHA-20F,Multiplrexor de corriente 5 contactos 3 USB,Blanco,140
+1,CHA-22F,Multiplexor de corriente 3 contactos 3 USB,Negro,160
+,,,
+,,Dispensador eléctrico de agua,,
+1,AGUA-304,Dispensador eléctrico de agua,Blanco,90
+1,AGUA-504,Dispensador eléctrico de agua,Negro,90
+,,,
+,,Maumanometro,,
+1,Arm Style,Maumanometro parlante rec. presión,Blanco,250
+,,,
+,,Aspiradoras,,
+1,ASP,Apiradora Portatil Automóvil DC 12V,Blanco,170
+1,KDBASPI,Aspiradora Koblenz seco mojado 2.0 HP,Negro,750
+,,,
+,,Soporte Celular,,
+2,BA-82,Soporte tipo cartera para celular,Ro/Bl/Ne/Ve,40
+1,,Soporte carro aire acondicionado para celular,Negro,60
+1,BA-62,Soporte escritorio,Amarillo,60
+1,,Soporte imán genérico para automóvil,Negro,50
+1,BA-N98,Soporte para BICICLETA,Negro,80
+,,,
+,,Soporte TV,,
+1,HDL-117B,Soporte TV 14-42,Negro,180
+1,X-400,Soporte TV 32-55,Negro,270
+,,,
+,,Lamparas y focos LED FX,,
+1,LED 54W,Foco LED 54W platillo,Blanco,140
+2,LED 45W,Foco LED 45W cilindro,Blanco,60
+2,LED 30W,Foco LED 30W cilindro,Blanco,50
+2,LED 24W,Foco LED 24W cilindro,Blanco,40
+1,LED 20W,Foco LED 20W cilindro,Blanco,00	
+2,LED 16W,Foco LED 16W platillo,Blanco,50
+3,LED 15W,Foco LED 15W cilindro,Blanco,30
+1,LED 13W,Foco LED 16W platillo,Blanco,40
+1,PP-900,Lámpara solar con control remoto y sensor de movimiento,Negro,250
+1,LED-615,Lámpara mini portátil recargable,Negro,50
+1,LED-8622A,Lámpara minero 10W recargable,Negro/dorado,80
+1,LED-3232,Lámpara mini portátil recargable,Negro,130
+2,LED-5808,Lámpara doble de emergencia CABEZA,Negro,160
+1,LED-65W,Foco LED 65W cilindro,Blanco,180
+1,LED-80W,Foco LED 80W cilindro,Blanco,170
+1,LED-50W,Foco LED 50W cilindro,Blanco,140
+1,LED-55W,Foco LED 55W cilindro,Blanco,130
+3,TJ-6689B,Lampara de mano 3 en 1,Azul/Verde,200
+,,,
+,,Ventiladores,,
+1,FS-16,Ventilador Clip,Verde Pastel,140
+1,FS-31,Ventilador de mano,Beige Pastel,70
+1,FS-6601,Ventilador escritorio,Morado Past,60
+1,FS-6603,Ventilador escritorio,Blanco/amarillo,60
+1,FS-6604,Ventilador mano,Verde Pastel,55
+,,,
+,,Cargadores de celulares,,
+1,NE-104,Cargador inalámbrico de escritorio,Plata/Blanco,150
+1,KM-032,Cargador inalámbrico de escritorio 2 en 1,Plata/Blanco,190
+4,AS-303-01-1,Cargador inteligente de pared USB-Lightning 20w c/cable,Negro,100
+1,AS-603-02,Cargador inteligente Super carga rápida 30w dual s/cable,Azul,140
+1,DS-81-2,Cargador coche dual 3.1a carga rápida c/c USB-Tipo C,Rojo,80
+1,DS-82-1,Cargador coche carga rápida 18w led c/cable USB-Tipo C,Gris Obscuro,60
+1,DS-82-2,Cargador coche carga rápida 18w led c/cable USB-Tipo C,Rojo,60
+,,,
+,,Power Banks,,
+3,HD-610,Pila recargable 20000 mAh multicharger,Negro,250
+1,HD-616,Pila recargable 10000 mAh multicharger c/display,Negro/Blanco,200
+1,HD-615,Mini pila portátil recargable 5000 mAh para viaje,Negro/Blanco,120
+1,K079,Fuente de Alimnetación movil 12k,Negro,350
+,,,
+,,Cables de Computo,,
+3,,Cable HDMI ,Negro,40
+,,Cable video HDMI mac,Blanco,140
+,,Cable VGA,Negro,40
+,,Cable de poder ,Negro,40
+1,,Cable Auxiliar/1M/3.5/Tejido,Blanco con negro,35
+2,,Cable Auxiliar/Agujeta,Blanco Negro,20
+1,,Cable Display Port a Display Port,Negro,80
+1,WIR-U12V,Cable V8 1M,Negro,20
+,,,
+,,Candados,,
+1,CAN,Candado para Lap top Kensigton,Negro,140
+,,,
+,,Mouse y combos de teclado y mouse,,
+1,1HORA,Mouse inalambrico 1HORA,Negro,150
+2,RZILIENT,Combo teclado y mouse inalambricos,Negro,500
+3,DELL580,Combo teclado y mouse inalambricos,Gris/negro,800
+,,,
+,,Basculas Digitales,,
+1,Advance,Bascula electrónica multifunciones 30 kg. c/detector de bill.,Plata,800
+1,Vinson,Bascula electrónica multifunciones 40 kg.,Plata,800
+,,,
+,,Kit de herramientas,,
+1,GJ-325,Tool Set,Gris,410
+1,GJ-324,Tool Set,Gris,250
+,,,
+,,Relojes digitales con Audifonos,,
+1,8 Ultra,i8 ultra earphones,Plateado/blanco,350
+,,,
+,,Raqueta electrica para mosquitos,,
+2,HX-D-6,Electric Mosquito Racket,Verde y naranja,120
+,,,
+,,Extención,,
+2,EX-415M,Extención de 15 metros,Amarilla,150
+3,EX-410M,Extención de 10 metros,Amarilla/Naranja,110
+,,,
+,,Cinturón,,
+6,CIN,Cinturon liso,Negro/Azul/Gris/Rojo,50
+,,,					
+,,Encendedor electrico recargable,,
+4,RYL-2001,Encendedor electrico recargable USB,Negro,110`;
+
+        function parseCSV(data) {
+            const lines = data.split('\n').slice(2); // Omitir las 2 primeras filas de encabezado
+            const products = [];
+            let currentCategory = 'Sin Categoría';
+            let idCounter = 1;
+
+            lines.forEach(line => {
+                if (!line.trim()) return;
+
+                const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+
+                // Detectar línea de categoría
+                if (columns[0] === '' && columns[1] === '' && columns[2] !== '' && columns[3] === '' && (!columns[4] || columns[4] === '')) {
+                    currentCategory = columns[2];
+                    return;
+                }
+
+                // Detectar línea de continuación
+                if (columns[0] === '' && columns[1] === '' && columns[2] !== '' && products.length > 0 && (!columns[4] || columns[4] === '')) {
+                    products[products.length - 1].description += `, ${columns[2]}`;
+                    return;
+                }
+
+                // Procesar línea de producto
+                const quantity = parseInt(columns[0], 10);
+                const description = columns[2];
+                const price = parseFloat(columns[4]);
+
+                if (description && (description.trim() !== '') && (!isNaN(quantity) || !isNaN(price))) {
+                    products.push({
+                        id: idCounter++,
+                        quantity: isNaN(quantity) ? 1 : quantity,
+                        code: columns[1] || 'N/A',
+                        description: description,
+                        color: columns[3] || 'Varios',
+                        price: isNaN(price) ? 0.0 : price,
+                        category: currentCategory,
+                    });
+                }
+            });
+
+            return products;
+        }
+
+        const ALL_PRODUCTS = parseCSV(csvData);
+        // --- FIN DE LA BASE DE DATOS ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('search');
+            const categorySelect = document.getElementById('category');
+            const sortSelect = document.getElementById('sort');
+            const availabilityCheckbox = document.getElementById('availability');
+            const productGrid = document.getElementById('product-grid');
+            const noResultsDiv = document.getElementById('no-results');
+            const contactForm = document.getElementById('contact-form');
+            const formStatus = document.getElementById('form-status');
+            const loader = document.getElementById('loader');
+
+            // --- INICIALIZACIÓN ---
+            
+            // Simula un tiempo de carga y oculta el loader
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }, 500);
+            
+            populateCategories();
+            renderProducts();
+
+            // --- EVENT LISTENERS ---
+            [searchInput, categorySelect, sortSelect, availabilityCheckbox].forEach(el => {
+                el.addEventListener('input', renderProducts);
+                el.addEventListener('change', renderProducts);
+            });
+            
+            contactForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                formStatus.textContent = '¡Mensaje enviado con éxito! Gracias por contactarme.';
+                setTimeout(() => formStatus.textContent = '', 4000);
+                contactForm.reset();
+            });
+
+            // --- FUNCIONES ---
+
+            function populateCategories() {
+                const categories = [...new Set(ALL_PRODUCTS.map(p => p.category))];
+                categories.sort().forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+            }
+
+            function renderProducts() {
+                // 1. Filtrar
+                let filteredProducts = [...ALL_PRODUCTS];
+
+                const searchTerm = searchInput.value.toLowerCase();
+                if (searchTerm) {
+                    filteredProducts = filteredProducts.filter(p => 
+                        p.description.toLowerCase().includes(searchTerm) ||
+                        p.code.toLowerCase().includes(searchTerm) ||
+                        p.category.toLowerCase().includes(searchTerm)
+                    );
+                }
+
+                const selectedCategory = categorySelect.value;
+                if (selectedCategory !== 'all') {
+                    filteredProducts = filteredProducts.filter(p => p.category === selectedCategory);
+                }
+                
+                if (availabilityCheckbox.checked) {
+                    filteredProducts = filteredProducts.filter(p => p.quantity > 0);
+                }
+
+                // 2. Ordenar
+                const sortValue = sortSelect.value;
+                filteredProducts.sort((a, b) => {
+                    switch(sortValue) {
+                        case 'name_asc': return a.description.localeCompare(b.description);
+                        case 'name_desc': return b.description.localeCompare(a.description);
+                        case 'price_asc': return a.price - b.price;
+                        case 'price_desc': return b.price - a.price;
+                        case 'qty_asc': return a.quantity - b.quantity;
+                        case 'qty_desc': return b.quantity - a.quantity;
+                        default: return 0;
+                    }
+                });
+
+                // 3. Renderizar
+                productGrid.innerHTML = '';
+
+                if (filteredProducts.length === 0) {
+                    noResultsDiv.classList.remove('hidden');
+                    productGrid.classList.add('hidden');
+                } else {
+                    noResultsDiv.classList.add('hidden');
+                    productGrid.classList.remove('hidden');
+                }
+
+                filteredProducts.forEach(product => {
+                    const availabilityColor = product.quantity > 0 ? 'text-green-400' : 'text-red-500';
+                    const availabilityText = product.quantity > 0 ? `${product.quantity} en stock` : 'Agotado';
+                    
+                    const card = `
+                        <div class="card-container rounded-lg p-5 flex flex-col h-full cyan-glow">
+                            <div class="flex-grow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-xs font-semibold bg-cyan-900/50 text-cyan-300 py-1 px-2 rounded">${product.category}</span>
+                                    <span class="text-xs font-bold ${availabilityColor}">${availabilityText}</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-white mb-2">${product.description}</h3>
+                                <p class="text-sm text-gray-400 mb-4">Clave: ${product.code} | Color: ${product.color}</p>
+                            </div>
+                            <div class="text-right mt-auto">
+                                <span class="text-2xl font-extrabold text-white">$${product.price.toFixed(2)}</span>
+                                <span class="text-sm text-gray-500">MXN</span>
+                            </div>
+                        </div>
+                    `;
+                    productGrid.innerHTML += card;
+                });
+            }
+        });
+
+        // --- NAVEGACIÓN ENTRE SECCIONES ---
+        function showSection(sectionId) {
+            const inventorySection = document.getElementById('inventory-section');
+            const contactSection = document.getElementById('contact-section');
+
+            if (sectionId === 'inventory') {
+                inventorySection.classList.remove('hidden-section');
+                contactSection.classList.add('hidden-section');
+            } else if (sectionId === 'contact') {
+                inventorySection.classList.add('hidden-section');
+                contactSection.classList.remove('hidden-section');
+            }
+        }
+    </script>
+</body>
+</html>
